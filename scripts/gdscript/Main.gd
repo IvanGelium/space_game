@@ -3,11 +3,12 @@ extends Node2D
 @onready var renderer: PlanetRenderer = $Planet_renderer 
 @onready var generator: PlanetGenerator = $Planet_generator
 @onready var camera: Camera2D = $Camera2D
+@onready var generator_rust = $PlanetGeneratorNew # Имя должно совпадать с именем в дереве
 
 func _ready():
 	generator.setup()
 	renderer.setup()
-	
+	generator_rust.hello() 
 	generate_logic()
 
 func _process(_delta):
@@ -82,26 +83,38 @@ func _input(event):
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			modify_terrain(grid_pos, 20.0)  # Сильно строим
 
+#func modify_terrain(grid_pos: Vector2, amount: float):
+	## Увеличим радиус и силу, чтобы эффект был мгновенным
+	#print("Grid Click:", grid_pos) # Должно быть в пределах от 0 до 800
+	#var brush_radius = 8.0 
+	#var brush_strength = amount * 100.0 # Усиливаем воздействие
+	#
+	#for y in range(int(grid_pos.y - brush_radius), int(grid_pos.y + brush_radius)):
+		#for x in range(int(grid_pos.x - brush_radius), int(grid_pos.x + brush_radius)):
+			#var p = Vector2(x, y)
+			#if grid_pos.distance_to(p) < brush_radius:
+				#generator.set_density(x, y, brush_strength)
+	#
+	#var affected_chunks = get_affected_chunks(grid_pos, brush_radius)
+	#for cid in affected_chunks:
+		## Вычисляем мировые координаты начала чанка для генератора
+		#var chunk_origin = cid * Config.CHUNK_SIZE
+		#var vertices = generator.get_chunk_geometry(chunk_origin)
+		#renderer.update_chunk_visual(cid, vertices)
+ 	#
+	#print("Изменен террейн в ", grid_pos, ". Обновлено чанков: ", affected_chunks.size())
+
 func modify_terrain(grid_pos: Vector2, amount: float):
-	# Увеличим радиус и силу, чтобы эффект был мгновенным
-	print("Grid Click:", grid_pos) # Должно быть в пределах от 0 до 800
-	var brush_radius = 8.0 
-	var brush_strength = amount * 100.0 # Усиливаем воздействие
+	# 1. Вызываем тяжелую логику в Rust
+	generator.modify_terrain(grid_pos, 15.0, amount)
 	
-	for y in range(int(grid_pos.y - brush_radius), int(grid_pos.y + brush_radius)):
-		for x in range(int(grid_pos.x - brush_radius), int(grid_pos.x + brush_radius)):
-			var p = Vector2(x, y)
-			if grid_pos.distance_to(p) < brush_radius:
-				generator.set_density(x, y, brush_strength)
-	
-	var affected_chunks = get_affected_chunks(grid_pos, brush_radius)
-	for cid in affected_chunks:
-		# Вычисляем мировые координаты начала чанка для генератора
+	# 2. Обновляем только затронутые чанки
+	var affected = get_affected_chunks(grid_pos, 15.0)
+	for cid in affected:
 		var chunk_origin = cid * Config.CHUNK_SIZE
+		# Получаем УЖЕ готовую геометрию из Rust
 		var vertices = generator.get_chunk_geometry(chunk_origin)
 		renderer.update_chunk_visual(cid, vertices)
- 	
-	print("Изменен террейн в ", grid_pos, ". Обновлено чанков: ", affected_chunks.size())
 
 
 func render_chunk(cid):

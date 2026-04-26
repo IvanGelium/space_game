@@ -18,3 +18,5 @@ fill_color = Color(0.5488115, 0.06395201, 0.26894575, 1)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=571202108]
 script = ExtResource("2_0xm2m")
+
+[node name="PlanetGeneratorNew" type="PlanetGeneratorNew" parent="." unique_id=468451955]

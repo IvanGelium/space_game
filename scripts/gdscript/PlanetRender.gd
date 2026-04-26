@@ -42,40 +42,6 @@ func setup():
 	for child in get_children():
 		child.queue_free()
 
-# Основная функция: принимает геометрию чанка и обновляет его визуализацию
-#func update_chunk_visual(chunk_id: Vector2i, vertices: PackedVector2Array):
-	#var chunk_name = "Chunk_%d_%d" % [chunk_id.x, chunk_id.y]
-	#var chunk_node = get_node_or_null(chunk_name)
-	#
-	## 1. Если чанка еще нет — создаем его
-	#if not chunk_node:
-		#chunk_node = _create_chunk_node(chunk_name)
-	#
-	## Ссылки на компоненты внутри чанка
-	#var polygon_node = chunk_node.get_node("Polygon")
-	#var collision_node = chunk_node.get_node("Collision")
-	#var line_node = chunk_node.get_node("Line")
-	#active_chunks[chunk_id] = true
-	#
-	## 2. Обновляем геометрию
-	#if vertices.size() > 2:
-		## Визуал (заливка)
-		#polygon_node.polygon = vertices
-		#polygon_node.color = fill_color
-		#
-		## Линия контура (чтобы поверхность была четкой)
-		#line_node.points = vertices
-		#line_node.width = line_width
-		#line_node.default_color = line_color
-		#
-		## Физика
-		#collision_node.set_deferred("polygon", vertices)
-	#else:
-		## Если точек нет (пустой космос), очищаем полигоны
-		#polygon_node.polygon = PackedVector2Array()
-		#line_node.points = PackedVector2Array()
-		#collision_node.set_deferred("polygon", PackedVector2Array())
-
 func update_chunk_visual(chunk_id: Vector2i, vertices: PackedVector2Array):
 	var chunk_node: StaticBody2D
 	
