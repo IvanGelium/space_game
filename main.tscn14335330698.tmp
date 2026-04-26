@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://2ike15syq5bd"]
+
+[ext_resource type="Script" uid="uid://dan8jt254g3sl" path="res://scripts/gdscript/Main.gd" id="1_0xm2m"]
+[ext_resource type="Script" uid="uid://kvuudmtfducv" path="res://scripts/cameraControl.gd" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://bft7ci0akid38" path="res://scripts/rust/forPort/PlanetGenerator.gd" id="2_1bvp3"]
+[ext_resource type="Script" uid="uid://cd2qvfp7bfve1" path="res://scripts/gdscript/PlanetRender.gd" id="3_h2yge"]
+
+[node name="Main" type="Node2D" unique_id=998759872]
+script = ExtResource("1_0xm2m")
+
+[node name="Planet_generator" type="Node2D" parent="." unique_id=1714646700]
+script = ExtResource("2_1bvp3")
+
+[node name="Planet_renderer" type="Node2D" parent="." unique_id=1653147283]
+script = ExtResource("3_h2yge")
+line_width = 1.0
+line_color = null
+fill_color = Color(0.5488115, 0.06395201, 0.26894575, 1)
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=571202108]
+script = ExtResource("2_0xm2m")

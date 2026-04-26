@@ -1,0 +1,10 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+*.translation
+
+# Rust (на будущее)
+target/
+
+# System
+.DS_Store
