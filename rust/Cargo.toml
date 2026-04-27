@@ -8,3 +8,13 @@ crate-type = ["cdylib"]  # Compile this crate to a dynamic C library.
 
 [dependencies]
 godot = "0.5.1"
+noise = "0.9"
+rand = "0.8"
+rand_pcg = "0.3"
+rayon = "1.8"
+
+
+[profile.release]
+lto = true          # Оптимизация на уровне линковки
+codegen-units = 1   # Чуть медленнее компиляция, но быстрее код
+panic = "abort"     # Уменьшает размер бинарника, сразу выходя при панике

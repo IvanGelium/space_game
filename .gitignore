@@ -1,10 +1,24 @@
-# Godot 4+ specific ignores
-.godot/
-/android/
-*.translation
+# --- Godot ---
+.godot
+.godot/              # Импортированные ресурсы и кеш (самое важное)
+*.tscn[0-9]*           # Временные файлы сцен (те, что ты нашел)
+*.tres[0-9]*           # Временные файлы ресурсов
+*.translation          # Генерируемые файлы перевода
+/android/              # Сборки под Android
+export_presets.cfg     # Настройки экспорта (могут содержать пароли)
+target
+# --- Rust (GDExtension / GDNative) ---
+target/                # Скомпилированные бинарники и артефакты Rust
+**/*.rs.bk             # Бэкапы исходников Rust
 
-# Rust (на будущее)
-target/
+# --- Бинарники расширений ---
+# Игнорируем скомпилированные либы, которые Rust кладет в папку Godot
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
 
-# System
-.DS_Store
+# --- System & IDE ---
+.DS_Store              # macOS системные файлы
+*.tmp                  # Общие временные файлы

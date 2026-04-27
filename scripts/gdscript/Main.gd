@@ -1,14 +1,16 @@
 extends Node2D
 
 @onready var renderer: PlanetRenderer = $Planet_renderer 
-@onready var generator: PlanetGenerator = $Planet_generator
+@onready var generator: PlanetGeneratorDepr = $Planet_generator_depr
 @onready var camera: Camera2D = $Camera2D
-@onready var generator_rust = $PlanetGeneratorNew # Имя должно совпадать с именем в дереве
+#@onready var generator_rust = $PlanetGenerator # Имя должно совпадать с именем в дереве
+@onready var world_api: = $WorldAPI
 
 func _ready():
 	generator.setup()
 	renderer.setup()
-	generator_rust.hello() 
+	world_api.setup_generator(512);
+	world_api.generate_density()
 	generate_logic()
 
 func _process(_delta):

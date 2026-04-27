@@ -1,5 +1,5 @@
 
-class_name PlanetGenerator
+class_name PlanetGeneratorDepr
 extends Node2D
 
 var noise = FastNoiseLite.new()
