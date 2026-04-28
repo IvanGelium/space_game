@@ -9,29 +9,26 @@ extends Node2D
 func _ready():
 	generator.setup()
 	renderer.setup()
-	world_api.setup_generator(512);
-	world_api.generate_density()
+	world_api.setup_generator(256);
 	generate_logic()
 
 func _process(_delta):
 	update_visible_chunks()
 
 func generate_logic():
-	var config = PlanetConfig.new().set_radius(350)
-	generator.generate_density(config)
+	#var config = PlanetConfig.new().set_radius(350)
+	#generator.generate_density(config)
+	world_api.generate_density()
+	
 
 	for y in range(0, Config.MAP_SIZE - Config.CHUNK_SIZE, Config.CHUNK_SIZE):
 		for x in range(0, Config.MAP_SIZE - Config.CHUNK_SIZE, Config.CHUNK_SIZE):
 			var chunk_pos = Vector2i(x, y)
-			var raw_vertices = generator.get_chunk_geometry(chunk_pos)
+			var mesh = world_api.get_chunk_mesh(chunk_pos)
 			
-			if raw_vertices.size() > 0:
-				# Сшиваем отрезки в замкнутый контур
-				var closed_polygon = _stitch_segments(raw_vertices)
-				
-				# Отправляем в рендерер
+			if mesh.size() > 0:
 				var chunk_id = Vector2i(x / Config.CHUNK_SIZE, y / Config.CHUNK_SIZE)
-				renderer.update_chunk_visual(chunk_id, closed_polygon)
+				renderer.update_chunk_visual(chunk_id,mesh)
 
 # Алгоритм сшивания отрезков в один (или несколько) полигонов
 func _stitch_segments(segments: PackedVector2Array) -> PackedVector2Array:
@@ -85,45 +82,22 @@ func _input(event):
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			modify_terrain(grid_pos, 20.0)  # Сильно строим
 
-#func modify_terrain(grid_pos: Vector2, amount: float):
-	## Увеличим радиус и силу, чтобы эффект был мгновенным
-	#print("Grid Click:", grid_pos) # Должно быть в пределах от 0 до 800
-	#var brush_radius = 8.0 
-	#var brush_strength = amount * 100.0 # Усиливаем воздействие
-	#
-	#for y in range(int(grid_pos.y - brush_radius), int(grid_pos.y + brush_radius)):
-		#for x in range(int(grid_pos.x - brush_radius), int(grid_pos.x + brush_radius)):
-			#var p = Vector2(x, y)
-			#if grid_pos.distance_to(p) < brush_radius:
-				#generator.set_density(x, y, brush_strength)
-	#
-	#var affected_chunks = get_affected_chunks(grid_pos, brush_radius)
-	#for cid in affected_chunks:
-		## Вычисляем мировые координаты начала чанка для генератора
-		#var chunk_origin = cid * Config.CHUNK_SIZE
-		#var vertices = generator.get_chunk_geometry(chunk_origin)
-		#renderer.update_chunk_visual(cid, vertices)
- 	#
-	#print("Изменен террейн в ", grid_pos, ". Обновлено чанков: ", affected_chunks.size())
+
 
 func modify_terrain(grid_pos: Vector2, amount: float):
-	# 1. Вызываем тяжелую логику в Rust
-	generator.modify_terrain(grid_pos, 15.0, amount)
+	world_api.modify_terrain(grid_pos, 15.0, amount) # Вызываем через API
 	
-	# 2. Обновляем только затронутые чанки
 	var affected = get_affected_chunks(grid_pos, 15.0)
 	for cid in affected:
-		var chunk_origin = cid * Config.CHUNK_SIZE
-		# Получаем УЖЕ готовую геометрию из Rust
-		var vertices = generator.get_chunk_geometry(chunk_origin)
-		renderer.update_chunk_visual(cid, vertices)
+		render_chunk(cid) # Используем общую функцию отрисовки
 
-
-func render_chunk(cid):
+func render_chunk(cid: Vector2i):
 	var chunk_origin = cid * Config.CHUNK_SIZE
-	var vertices = generator.get_chunk_geometry(chunk_origin)
-	# Мы добавили метод force_update в рендерер, чтобы он заменял старый полигон
-	renderer.update_chunk_visual(cid, vertices)
+	# Вызываем наш новый метод, который возвращает Dictionary с мешем
+	var mesh_data = world_api.get_chunk_mesh(chunk_origin)
+	
+	if not mesh_data.is_empty():
+		renderer.update_chunk_visual(cid, mesh_data)
 	
 	
 func get_affected_chunks(grid_pos: Vector2, brush_radius: float) -> Array[Vector2i]:

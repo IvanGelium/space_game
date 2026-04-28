@@ -13,8 +13,6 @@ script = ExtResource("2_1bvp3")
 
 [node name="Planet_renderer" type="Node2D" parent="." unique_id=1653147283]
 script = ExtResource("3_h2yge")
-line_width = 0.115
-fill_color = Color(0.5488115, 0.06395201, 0.26894575, 1)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=571202108]
 script = ExtResource("2_0xm2m")

@@ -12,8 +12,7 @@ where
         Ok(result) => {
             // Логируем время только в дебаге
             #[cfg(debug_assertions)]
-            godot_print!("[WorldApi] '{}' took {:?}", task_name, start_time.elapsed());
-
+            // godot_print!("[WorldApi] '{}' took {:?}", task_name, start_time.elapsed());
             Some(result)
         }
         Err(err) => {
