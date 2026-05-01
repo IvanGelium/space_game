@@ -1,8 +1,9 @@
-use crate::clutch::config::*;
+use crate::clutch::configs::base_config::*;
 use crate::core::math_utils::NoiseSettings;
+use crate::world::material_resolver::MaterialResolver;
 use crate::world::world_utils::*;
 use godot::prelude::*;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 
 pub const MAT_AIR: u8 = 0;
 pub const MAT_STONE: u8 = 1;
@@ -14,6 +15,7 @@ pub const MAT_CORE: u8 = 6;
 
 pub struct PlanetGenerator {
     pub noise_settings: NoiseSettings,
+    pub material_resolver: MaterialResolver,
     pub planet_seed: u32,
     pub radius: f32,
     pub density_map: Vec<f32>,
@@ -22,11 +24,12 @@ pub struct PlanetGenerator {
 }
 
 impl PlanetGenerator {
-    pub fn new(radius: f32) -> Self {
+    pub fn new(radius: f32, atmos_height: f32) -> Self {
         Self {
             planet_seed: PLANET_SEED,
             radius,
             noise_settings: NoiseSettings::new(PLANET_SEED, 5.0, 5.0),
+            material_resolver: MaterialResolver::new(radius, atmos_height),
             density_map: vec![0.0; MAP_SIZE * MAP_SIZE],
             material_map: vec![0; MAP_SIZE * MAP_SIZE],
             center: Vector2::new(MAP_SIZE as f32 / 2.0, MAP_SIZE as f32 / 2.0),
@@ -58,31 +61,29 @@ impl PlanetGenerator {
         // Ссылка на настройки шума, чтобы передать её в замыкание потоков
         let noise = &self.noise_settings;
 
-        // Разрезаем массив density_map на части по размеру строки (map_size)
-        // Каждая итерация .for_each теперь обрабатывает целую строку в отдельном потоке
-        self.density_map
-            .par_chunks_mut(map_size)
-            .enumerate()
-            .for_each(|(y, row)| {
-                let y_f = y as f32;
-                let dy = y_f - center_y;
-                let dy_sq = dy * dy; // Квадрат расстояния по Y — константа для всей строки
+        for y in 0..map_size {
+            let y_f = y as f32;
+            let dy = y_f - center_y;
+            let dy_sq = dy * dy;
+            let row_offset = y * map_size;
 
-                for x in 0..map_size {
-                    let x_f = x as f32;
-                    let dx = x_f - center_x;
+            for x in 0..map_size {
+                let x_f = x as f32;
+                let dx = x_f - center_x;
+                let idx = row_offset + x;
+                let (angle, depth) =
+                    get_polar_info(x_f, y_f, Vector2::new(center_x, center_y), radius);
 
-                    // Оптимизация: считаем гипотенузу без создания Vector2
-                    let dist = (dx * dx + dy_sq).sqrt();
-                    let mut d = radius - dist;
+                let dist = (dx * dx + dy_sq).sqrt();
+                let mut d = radius - dist;
 
-                    // Добавляем шум (метод get_value уже оптимизирован нами ранее)
-                    d += noise.get_value(x_f, y_f);
-
-                    // Записываем напрямую в ячейку строки
-                    row[x] = d;
-                }
-            });
+                // Добавляем шум (опционально)
+                d += noise.get_value(x_f, y_f);
+                self.density_map[idx] = d;
+                let is_solid = d > 0.0;
+                self.material_map[idx] = self.material_resolver.resolve(dist, is_solid);
+            }
+        }
     }
 
     pub fn get_chunk_mesh(&mut self, chunk_pos: Vector2i) -> Dictionary<StringName, Variant> {

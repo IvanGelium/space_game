@@ -24,14 +24,14 @@ impl INode for WorldAPI {
 #[godot_api]
 impl WorldAPI {
     #[func]
-    pub fn setup_generator(&mut self, radius: f32) {
+    pub fn setup_generator(&mut self, radius: f32, atmos_height: f32) {
         // Оборачиваем даже инициализацию, чтобы видеть ошибки, если что-то пойдет не так
         safe_run("setup_generator", || {
             godot_print!("Bridge: Setting up generator with radius {}", radius);
 
             // Предположим, что PlanetGenerator::new теперь принимает только радиус
             // и берет MAP_SIZE из констант, как мы решили ранее
-            self.generator = Some(PlanetGenerator::new(radius));
+            self.generator = Some(PlanetGenerator::new(radius, atmos_height));
 
             Ok(()) // Возвращаем успех
         });

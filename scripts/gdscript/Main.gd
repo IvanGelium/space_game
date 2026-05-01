@@ -9,15 +9,13 @@ extends Node2D
 func _ready():
 	generator.setup()
 	renderer.setup()
-	world_api.setup_generator(256);
+	world_api.setup_generator(256,64);
 	generate_logic()
 
 func _process(_delta):
 	update_visible_chunks()
 
 func generate_logic():
-	#var config = PlanetConfig.new().set_radius(350)
-	#generator.generate_density(config)
 	world_api.generate_density()
 	
 

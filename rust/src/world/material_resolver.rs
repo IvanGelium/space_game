@@ -4,10 +4,10 @@ pub struct MaterialResolver {
 }
 
 impl MaterialResolver {
-    pub fn new(planet_radius: f32) -> Self {
+    pub fn new(planet_radius: f32, atmos_height: f32) -> Self {
         Self {
             planet_radius,
-            atmos_height: 64.0, // Высота атмосферы в ячейках
+            atmos_height,
         }
     }
 

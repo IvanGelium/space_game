@@ -4,7 +4,7 @@ compatibility_minimum = 4.1
 reloadable = true
 
 [libraries]
-windows.debug.x86_64 =   "res://rust/target/quick/rust_project.dll"
+windows.debug.x86_64 =   "res://rust/target/debug/rust_project.dll"
 windows.release.x86_64 = "res://rust/target/release/rust_project.dll"
 macos.debug =            "res://rust/target/debug/librust_project.dylib"
 macos.release =          "res://rust/target/release/librust_project.dylib"

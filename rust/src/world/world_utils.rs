@@ -39,22 +39,11 @@ impl MeshData {
     }
 }
 
-// #[derive(godot::prelude::GodotConvert, godot::prelude::Var)]
-// #[godot(via = Dictionary)]
-// pub struct ChunkMeshData {
-//     pub vertices: PackedVector2Array,
-//     pub indices: PackedInt32Array,
-// }
-// impl ChunkMeshData {
-//     pub fn new() -> ChunkMeshData {
-//         Self {
-//             vertices: PackedVector2Array::new(),
-//             indices: PackedInt32Array::new(),
-//         }
-//     }
+pub fn get_polar_info(x: f32, y: f32, center: Vector2, radius: f32) -> (f32, f32) {
+    let dx = x - center.x;
+    let dy = y - center.y;
+    let dist = (dx * dx + dy * dy).sqrt();
 
-//     pub fn fill(&mut self, md: MeshData) {
-//         self.vertices = md.vertices;
-//         self.indices = md.indices;
-//     }
-// }
+    // Возвращаем кортеж (угол, относительная_глубина)
+    (dy.atan2(dx), dist / radius)
+}
