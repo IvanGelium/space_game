@@ -11,7 +11,7 @@ where
     match f() {
         Ok(result) => {
             // Логируем время только в дебаге
-            #[cfg(debug_assertions)]
+            // #[cfg(debug_assertions)]
             // godot_print!("[WorldApi] '{}' took {:?}", task_name, start_time.elapsed());
             Some(result)
         }
