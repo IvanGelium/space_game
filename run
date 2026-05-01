@@ -1,0 +1,31 @@
+#!/bin/bash
+
+RUST_DIR="./rust"
+
+case "$1" in
+  "-tree")
+    DEPTH=${2:-3}
+    echo "--- Project Structure (Depth: $DEPTH) ---"
+    # Собираем команду в одну строку, чтобы избежать ошибок синтаксиса
+    find . -maxdepth "$DEPTH" ! -path "*/.*" ! -path "./rust/target*" ! -path "./.godot*" | grep -vE "\.import$|\.uid$" | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"
+    ;;
+
+  "-quick")
+    echo "--- Running Quick Build ---"
+    cd $RUST_DIR && cargo build --profile quick
+    ;;
+
+  "-dev")
+    echo "--- Running Dev Build ---"
+    cd $RUST_DIR && cargo build
+    ;;
+
+  "-release")
+    echo "--- Running Release Build ---"
+    cd $RUST_DIR && cargo build --release
+    ;;
+
+  *)
+    echo "Usage: sh run [-tree | -quick | -dev | -release]"
+    ;;
+esac
