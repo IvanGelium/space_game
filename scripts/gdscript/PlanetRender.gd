@@ -26,7 +26,7 @@
 
 extends Node2D
 class_name PlanetRenderer
-
+var planet_material = preload("res://res/test.tres")
 # Настройки отображения
 @export var fill_color: Color = Color(0.3, 0.3, 0.3, 1.0)
 
@@ -91,7 +91,7 @@ func update_chunk_visual(chunk_id: Vector2i, mesh_data: Dictionary):
 
 	var vertices = mesh_data.get("vertices", PackedVector2Array())
 	var indices = mesh_data.get("indices", PackedInt32Array())
-
+	var colors = mesh_data.get("colors", PackedColorArray()) # <--- Достаем цвета
 	if vertices.size() > 0:
 		# Создаем ArrayMesh
 		var array_mesh = ArrayMesh.new()
@@ -99,6 +99,7 @@ func update_chunk_visual(chunk_id: Vector2i, mesh_data: Dictionary):
 		arrays.resize(Mesh.ARRAY_MAX)
 		arrays[Mesh.ARRAY_VERTEX] = vertices
 		arrays[Mesh.ARRAY_INDEX] = indices
+		arrays[Mesh.ARRAY_COLOR] = colors # <--- Передаем в меш
 
 		array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 		
@@ -151,6 +152,7 @@ func _create_chunk_node(node_name: String) -> StaticBody2D:
 	mesh_i.name = "MeshInstance"
 	# Можно задать дефолтный цвет через Self Modulate или материал
 	mesh_i.self_modulate = fill_color 
+	mesh_i.material = planet_material # Назначаем общий материал чанку
 	node.add_child(mesh_i)
 	
 	# Для физики используем CollisionShape2D вместо CollisionPolygon2D

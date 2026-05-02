@@ -3,7 +3,6 @@ extends Node2D
 @onready var renderer: PlanetRenderer = $Planet_renderer 
 @onready var generator: PlanetGeneratorDepr = $Planet_generator_depr
 @onready var camera: Camera2D = $Camera2D
-#@onready var generator_rust = $PlanetGenerator # Имя должно совпадать с именем в дереве
 @onready var world_api: = $WorldAPI
 
 func _ready():
@@ -27,21 +26,6 @@ func generate_logic():
 			if mesh.size() > 0:
 				var chunk_id = Vector2i(x / Config.CHUNK_SIZE, y / Config.CHUNK_SIZE)
 				renderer.update_chunk_visual(chunk_id,mesh)
-
-# Алгоритм сшивания отрезков в один (или несколько) полигонов
-func _stitch_segments(segments: PackedVector2Array) -> PackedVector2Array:
-	if segments.size() < 2: return PackedVector2Array()
-	
-	# Т.к. Marching Squares выдает пары [A, B, C, D...] где AB - отрезок, CD - отрезок
-	# Нам нужно выстроить их друг за другом.
-	# Для MVP мы просто вернем их как есть, но для Polygon2D в идеале 
-	# нужно найти соседние точки. 
-	# ВАЖНО: Если мы используем Line2D с закрытым контуром, 
-	# массив должен идти по порядку часовой стрелки.
-	
-	# Временное решение для отображения (просто возвращаем массив):
-	# Чтобы Polygon2D работал без артефактов, Marching Squares должен быть полным.
-	return segments
 
 func update_visible_chunks():
 	# 1. Получаем область видимости камеры в мировых координатах

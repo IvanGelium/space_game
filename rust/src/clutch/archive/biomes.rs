@@ -1,68 +1,57 @@
-#[derive(Debug, Clone, Copy)]
-pub struct Biome {
-    pub id: u8,
-    pub name: &'static str,
-    pub dimensions: Dimensions,
-    pub temperature: f32,
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[repr(u8)] // Это говорит Rust хранить енам как число u8
+pub enum Layer {
+    Vacuum = 0,
+    AtmosHigh = 1,
+    AtmosLow = 2,
+    Mountains = 3,
+    Surface = 4,
+    Underground = 5,
+    DeepUnderground = 6,
+    Mantle = 7,
+    Lava = 8,
+    Core = 9,
 }
 
-pub const BIOMES: &[Biome] = &[
-    Biome {
-        id: 1,
-        name: "jungle",
-        dimensions: Dimensions {
-            height: 10.0,
-            width: 20.0,
-        },
-        temperature: 0.6,
-    },
-    Biome {
-        id: 2,
-        name: "desert",
-        dimensions: Dimensions {
-            height: 10.0,
-            width: 20.0,
-        },
-        temperature: 0.9,
-    },
-    Biome {
-        id: 3,
-        name: "Mountins",
-        dimensions: Dimensions {
-            height: 10.0,
-            width: 20.0,
-        },
-        temperature: 0.3,
-    },
-];
-
-// Удобные методы для работы
-impl Biome {
-    pub fn get_all() -> &'static [Biome] {
-        BIOMES
-    }
-
-    pub fn by_id(id: u8) -> Option<&'static Biome> {
-        BIOMES.iter().find(|b| b.id == id)
-    }
-
-    pub fn by_name(name: &'static str) -> Option<&'static Biome> {
-        BIOMES.iter().find(|b| b.name == name)
-    }
-
-    pub fn length() -> usize {
-        BIOMES.len()
+impl Layer {
+    pub fn from_u8(value: u8) -> Self {
+        match value {
+            0 => Layer::Vacuum,
+            1 => Layer::AtmosHigh,
+            2 => Layer::AtmosLow,
+            3 => Layer::Mountains,
+            4 => Layer::Surface,
+            5 => Layer::Underground,
+            6 => Layer::DeepUnderground,
+            7 => Layer::Mantle,
+            8 => Layer::Lava,
+            9 => Layer::Core,
+            _ => Layer::Vacuum, // Дефолт в случае ошибки
+        }
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Dimensions {
-    pub height: f32,
-    pub width: f32,
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[repr(u8)]
+pub enum Belt {
+    Arctic = 0,
+    Tundra = 1,
+    Temperate = 2,
+    Tropics = 3,
+    Equator = 4,
 }
 
-impl Dimensions {
-    pub fn new(width: f32, height: f32) -> Self {
-        Self { width, height }
+impl Belt {
+    pub fn from_u8(value: u8) -> Self {
+        match value {
+            0 => Belt::Arctic,
+            1 => Belt::Tundra,
+            2 => Belt::Temperate,
+            3 => Belt::Tropics,
+            4 => Belt::Equator,
+            _ => Belt::Arctic, // Дефолт в случае ошибки
+        }
     }
 }
+// Константы для настройки нарезки
+pub const SECTOR_COUNT: u32 = 24; // 12 секторов на видимую сторону

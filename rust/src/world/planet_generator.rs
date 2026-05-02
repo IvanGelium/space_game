@@ -1,17 +1,11 @@
+use crate::clutch::archive::biomes::*;
 use crate::clutch::configs::base_config::*;
 use crate::core::math_utils::NoiseSettings;
 use crate::world::material_resolver::MaterialResolver;
+use crate::world::planet_structure::PlanetStructure;
 use crate::world::world_utils::*;
 use godot::prelude::*;
 // use rayon::prelude::*;
-
-pub const MAT_AIR: u8 = 0;
-pub const MAT_STONE: u8 = 1;
-pub const MAT_DIRT: u8 = 2;
-pub const MAT_GRASS: u8 = 3;
-pub const MAT_SAND: u8 = 4;
-pub const MAT_SNOW: u8 = 5;
-pub const MAT_CORE: u8 = 6;
 
 pub struct PlanetGenerator {
     pub noise_settings: NoiseSettings,
@@ -21,6 +15,7 @@ pub struct PlanetGenerator {
     pub density_map: Vec<f32>,
     pub material_map: Vec<u8>,
     pub center: Vector2,
+    pub planet_structure: PlanetStructure,
 }
 
 impl PlanetGenerator {
@@ -33,6 +28,7 @@ impl PlanetGenerator {
             density_map: vec![0.0; MAP_SIZE * MAP_SIZE],
             material_map: vec![0; MAP_SIZE * MAP_SIZE],
             center: Vector2::new(MAP_SIZE as f32 / 2.0, MAP_SIZE as f32 / 2.0),
+            planet_structure: PlanetStructure::generate(PLANET_SEED),
         }
     }
 
@@ -81,7 +77,10 @@ impl PlanetGenerator {
                 d += noise.get_value(x_f, y_f);
                 self.density_map[idx] = d;
                 let is_solid = d > 0.0;
-                self.material_map[idx] = self.material_resolver.resolve(dist, is_solid);
+                let mat = self
+                    .material_resolver
+                    .resolve(angle, depth, &self.planet_structure);
+                self.material_map[idx] = mat;
             }
         }
     }
@@ -127,6 +126,8 @@ impl PlanetGenerator {
         let mut dict = Dictionary::new();
         dict.insert("vertices", &mesh_data.vertices);
         dict.insert("indices", &mesh_data.indices);
+        dict.insert("colors", &mesh_data.colors);
+
         dict
         // PackedVector2Array::from_iter(temp_vertices)
     }
@@ -137,6 +138,11 @@ impl PlanetGenerator {
     }
 
     fn add_triangles(&self, mesh: &mut MeshData, x: i32, y: i32, d: [f32; 4], case: i32) {
+        // Получаем ID материала из карты (берем по координате x, y ячейки)
+        let mat_id = self.material_map[(x as usize + y as usize * MAP_SIZE)];
+
+        // Кодируем ID в красный канал (0..1.0)
+        let mat_color = Color::from_rgba(mat_id as f32 / 255.0, 0.0, 0.0, 1.0);
         let xf = x as f32;
         let yf = y as f32;
 
@@ -155,86 +161,86 @@ impl PlanetGenerator {
         match case {
             0 => {} // Пусто
 
-            1 => mesh.add_triangle(p0, t, l), // Лево-Верх (d0)
+            1 => mesh.add_triangle(p0, t, l, mat_color), // Лево-Верх (d0)
 
-            2 => mesh.add_triangle(p1, r, t), // Право-Верх (d1)
+            2 => mesh.add_triangle(p1, r, t, mat_color), // Право-Верх (d1)
 
             3 => {
                 // Верхняя грань (d0, d1)
-                mesh.add_triangle(p0, p1, r);
-                mesh.add_triangle(p0, r, l);
+                mesh.add_triangle(p0, p1, r, mat_color);
+                mesh.add_triangle(p0, r, l, mat_color);
             }
 
-            4 => mesh.add_triangle(p2, b, r), // Право-Низ (d2)
+            4 => mesh.add_triangle(p2, b, r, mat_color), // Право-Низ (d2)
 
             5 => {
                 // Диагональ d0 и d2 (особый случай)
-                mesh.add_triangle(p0, t, l);
-                mesh.add_triangle(p2, b, r);
-                mesh.add_triangle(t, r, l); // Соединительный мостик (зависит от логики SDF)
-                mesh.add_triangle(r, b, l);
+                mesh.add_triangle(p0, t, l, mat_color);
+                mesh.add_triangle(p2, b, r, mat_color);
+                mesh.add_triangle(t, r, l, mat_color); // Соединительный мостик (зависит от логики SDF)
+                mesh.add_triangle(r, b, l, mat_color);
             }
 
             6 => {
                 // Правая грань (d1, d2)
-                mesh.add_triangle(p1, p2, b);
-                mesh.add_triangle(p1, b, t);
+                mesh.add_triangle(p1, p2, b, mat_color);
+                mesh.add_triangle(p1, b, t, mat_color);
             }
 
             7 => {
                 // Кроме Лево-Низ
-                mesh.add_triangle(p0, p1, p2);
-                mesh.add_triangle(p0, p2, b);
-                mesh.add_triangle(p0, b, l);
+                mesh.add_triangle(p0, p1, p2, mat_color);
+                mesh.add_triangle(p0, p2, b, mat_color);
+                mesh.add_triangle(p0, b, l, mat_color);
             }
 
-            8 => mesh.add_triangle(p3, l, b), // Лево-Низ (d3)
+            8 => mesh.add_triangle(p3, l, b, mat_color), // Лево-Низ (d3)
 
             9 => {
                 // Левая грань (d0, d3)
-                mesh.add_triangle(p0, t, p3);
-                mesh.add_triangle(t, b, p3);
+                mesh.add_triangle(p0, t, p3, mat_color);
+                mesh.add_triangle(t, b, p3, mat_color);
             }
 
             10 => {
                 // Диагональ d1 и d3 (особый случай)
-                mesh.add_triangle(p1, r, t);
-                mesh.add_triangle(p3, l, b);
-                mesh.add_triangle(t, r, l);
-                mesh.add_triangle(r, b, l);
+                mesh.add_triangle(p1, r, t, mat_color);
+                mesh.add_triangle(p3, l, b, mat_color);
+                mesh.add_triangle(t, r, l, mat_color);
+                mesh.add_triangle(r, b, l, mat_color);
             }
 
             11 => {
                 // Кроме Право-Низ
-                mesh.add_triangle(p0, p1, r);
-                mesh.add_triangle(p0, r, b);
-                mesh.add_triangle(p0, b, p3);
+                mesh.add_triangle(p0, p1, r, mat_color);
+                mesh.add_triangle(p0, r, b, mat_color);
+                mesh.add_triangle(p0, b, p3, mat_color);
             }
 
             12 => {
                 // Нижняя грань (d2, d3)
-                mesh.add_triangle(p3, p2, r);
-                mesh.add_triangle(p3, r, l);
+                mesh.add_triangle(p3, p2, r, mat_color);
+                mesh.add_triangle(p3, r, l, mat_color);
             }
 
             13 => {
                 // Кроме Право-Верх
-                mesh.add_triangle(p0, t, r);
-                mesh.add_triangle(p0, r, p2);
-                mesh.add_triangle(p0, p2, p3);
+                mesh.add_triangle(p0, t, r, mat_color);
+                mesh.add_triangle(p0, r, p2, mat_color);
+                mesh.add_triangle(p0, p2, p3, mat_color);
             }
 
             14 => {
                 // Кроме Лево-Верх
-                mesh.add_triangle(t, p1, p2);
-                mesh.add_triangle(t, p2, p3);
-                mesh.add_triangle(t, p3, l);
+                mesh.add_triangle(t, p1, p2, mat_color);
+                mesh.add_triangle(t, p2, p3, mat_color);
+                mesh.add_triangle(t, p3, l, mat_color);
             }
 
             15 => {
                 // Полный квадрат
-                mesh.add_triangle(p0, p1, p2);
-                mesh.add_triangle(p0, p2, p3);
+                mesh.add_triangle(p0, p1, p2, mat_color);
+                mesh.add_triangle(p0, p2, p3, mat_color);
             }
 
             _ => {}
@@ -281,42 +287,42 @@ impl PlanetGenerator {
         }
     }
 
-    pub fn generate_biomes(&mut self) {
-        let center = (MAP_SIZE as f32) / 2.0;
+    // pub fn generate_biomes(&mut self) {
+    //     let center = (MAP_SIZE as f32) / 2.0;
 
-        for y in 0..MAP_SIZE {
-            for x in 0..MAP_SIZE {
-                let idx = x + y * MAP_SIZE;
+    //     for y in 0..MAP_SIZE {
+    //         for x in 0..MAP_SIZE {
+    //             let idx = x + y * MAP_SIZE;
 
-                let dx = x as f32 - center;
-                let dy = y as f32 - center;
-                let dist = (dx * dx + dy * dy).sqrt();
-                let angle = dy.atan2(dx); // От -PI до PI
+    //             let dx = x as f32 - center;
+    //             let dy = y as f32 - center;
+    //             let dist = (dx * dx + dy * dy).sqrt();
+    //             let angle = dy.atan2(dx); // От -PI до PI
 
-                // 1. Сначала база по глубине
-                let mut mat = if dist < 50.0 {
-                    MAT_CORE // Ядро
-                } else if dist < 150.0 {
-                    MAT_STONE // Глубинный камень
-                } else {
-                    MAT_DIRT // Поверхностный слой
-                };
+    //             // 1. Сначала база по глубине
+    //             let mut mat = if dist < 50.0 {
+    //                 MAT_CORE // Ядро
+    //             } else if dist < 150.0 {
+    //                 MAT_STONE // Глубинный камень
+    //             } else {
+    //                 MAT_DIRT // Поверхностный слой
+    //             };
 
-                // 2. Накладываем биомы по углу (только для поверхности)
-                if dist > 140.0 {
-                    if angle.abs() > 2.5 {
-                        // Полюса (условно)
-                        mat = MAT_SNOW;
-                    } else if angle.abs() < 0.5 {
-                        // Экватор
-                        mat = MAT_SAND;
-                    } else if dist > 180.0 {
-                        mat = MAT_GRASS;
-                    }
-                }
+    //             // 2. Накладываем биомы по углу (только для поверхности)
+    //             if dist > 140.0 {
+    //                 if angle.abs() > 2.5 {
+    //                     // Полюса (условно)
+    //                     mat = MAT_SNOW;
+    //                 } else if angle.abs() < 0.5 {
+    //                     // Экватор
+    //                     mat = MAT_SAND;
+    //                 } else if dist > 180.0 {
+    //                     mat = MAT_GRASS;
+    //                 }
+    //             }
 
-                self.material_map[idx] = mat;
-            }
-        }
-    }
+    //             self.material_map[idx] = mat;
+    //         }
+    //     }
+    // }
 }
